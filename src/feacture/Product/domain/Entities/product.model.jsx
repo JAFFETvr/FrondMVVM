@@ -1,8 +1,8 @@
 export class Product {
-    constructor(id = null, name = "", price = 0) {
-      this.id = id;
-      this.name = name;
-      this.price = price;
+    constructor(Id = null, Name = "", Price = 0) {
+      this.Id = Id;
+      this.Name = Name;
+      this.Price = Price;
     }
   }
   
