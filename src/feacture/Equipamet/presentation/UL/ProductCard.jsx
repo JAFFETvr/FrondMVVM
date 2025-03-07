@@ -1,7 +1,11 @@
+import React, { useEffect, useState } from "react";
 import { useProductViewModel } from "../ViewModel/product.viewmodel";
 
 export default function ProductCard() {
   const { products, formData, handleInputChange, handleSubmit, handleEdit, handleDelete } = useProductViewModel();
+  
+  // Estado para almacenar el último mensaje recibido del WebSocket
+  const [socketMessage, setSocketMessage] = useState("");
 
   // Ajustar los datos que provienen de la API para que coincidan con los nombres de campos esperados
   const mappedProducts = products.map(product => ({
@@ -11,9 +15,47 @@ export default function ProductCard() {
     condition: product.ccondition, // Mapeamos 'ccondition' a 'condition'
   }));
 
+  useEffect(() => {
+    // Establecer la conexión WebSocket con el servidor
+    const socket = new WebSocket("ws://localhost:8081/ws");
+
+    // Evento cuando se recibe un mensaje del servidor
+    socket.onmessage = (event) => {
+      setSocketMessage(event.data); // Actualiza el estado con el mensaje recibido
+    };
+
+    // Evento cuando se abre la conexión
+    socket.onopen = () => {
+      console.log("Conectado al WebSocket");
+    };
+
+    // Evento cuando la conexión se cierra
+    socket.onclose = () => {
+      console.log("Conexión WebSocket cerrada");
+    };
+
+    // Evento de error
+    socket.onerror = (error) => {
+      console.error("Error en WebSocket", error);
+    };
+
+    // Limpiar la conexión WebSocket cuando el componente se desmonte
+    return () => {
+      socket.close();
+    };
+  }, []);
+
   return (
     <div className="p-4 max-w-md mx-auto bg-white shadow-md rounded-lg">
       <h2 className="text-xl font-bold mb-4">Gestión de Productos</h2>
+
+      {/* Muestra el mensaje recibido del WebSocket en una etiqueta <p> */}
+      {socketMessage && (
+        <p className="bg-gray-200 p-2 rounded text-center mb-4">
+          Mensaje en tiempo real: {socketMessage}
+        </p>
+      )}
+
       <form onSubmit={handleSubmit} className="mb-4">
         <input
           type="text"
@@ -46,6 +88,7 @@ export default function ProductCard() {
           {formData.id ? "Actualizar" : "Agregar"}
         </button>
       </form>
+
       <ul>
         {mappedProducts.length > 0 ? (
           mappedProducts.map((product) => (
